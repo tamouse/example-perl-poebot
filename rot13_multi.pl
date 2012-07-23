@@ -11,7 +11,7 @@ my $ircname = 'Diffley C. Biggers';
 
 my $settings = {
     'irc.funkykitty.net' => { port => 6667, channels => [ '#bottest' ], },
-    'irc.freenode.net' => { port => 6668, channels => [ '#tamtest' ], },
+    'irc.freenode.net' => { port => 6667, channels => [ '#tamtest' ], },
 };
 
 # We create our PoCo-IRC objects
