@@ -1,36 +1,82 @@
 package Users;
-
 use 5.010000;
 use strict;
 use warnings;
-
-require Exporter;
-
-our @ISA = qw(Exporter);
-
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Users ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
-	
-);
-
 our $VERSION = '0.01';
-
+use Object::Tiny qw/dbname/;
+use SQLite::DB;
 
 # Preloaded methods go here.
 
+# constructor    
+sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new( @_ );
+    initialize_database($self);
+    return $self;
+}
+
 1;
+
+sub initialize_database {
+    my $self = shift;
+    $self->{db} = SQLite::DB->new(resolve_dbname($self->{dbname}));
+    $self->{db}->connect;
+    create_tables($self);
+}
+
+sub resolve_dbname {
+    my $datadir = $main::datadir;
+    my $dbname = shift;
+    die "No writeable data store" if (! (-d $datadir && -w $datadir));
+    die "No database name given" if (! (defined $dbname && $dbname ne ''));
+    return $datadir.'/'.$dbname;
+}
+
+sub create_tables {
+    my $self = shift;
+    my $db = $self->{db};
+    $db->exec('create table if not exists chatnets (
+id integer not null primary key autoincrement,
+name text,
+)');
+    $db->exec('create table if not exists channels (
+id integer not null primary key autoincrement,
+name text,
+chatnetchannel integer not null,
+foreign key(chatnetchannel) references chatnets(id),
+)');
+    $db->exec('create table if not exists users (
+id integer not null primary key autoincrement,
+handle text,
+role integer not null default 0,
+birthdate date,
+pronouns text,
+drinker text,
+smoker text,
+postalcode text,
+email text,
+latitude text,
+longitude text,
+chatnetuser integer not null,
+foreign key(chatnetuser) references chatnets(id),
+)');
+    $db->exec('create table if not exists idents (
+id integer not null primary key autoincrement,
+userhost text,
+userident integer not null,
+foreign key(userident) references users(id),
+)');
+    $db->exec('create table if not exists altnicks (
+id integer not null primary key autoincrement,
+nick text,
+useraltnick integer,
+foreign key(useraltnick) references users(id),
+)');
+};
+
+
+
 __END__
 # Below is stub documentation for your module. You'd better edit it!
 
